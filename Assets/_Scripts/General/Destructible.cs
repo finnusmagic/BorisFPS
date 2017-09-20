@@ -1,0 +1,25 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Destructible : MonoBehaviour {
+
+    [SerializeField] GameObject destroyedVersion;
+    [SerializeField] float health = 50f;
+
+    public void TakeDamage(float amount)
+    {
+        health -= amount;
+
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        Instantiate(destroyedVersion, transform.position, transform.rotation);
+        Destroy(gameObject);
+    }
+}

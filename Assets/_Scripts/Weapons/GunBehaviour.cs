@@ -10,6 +10,7 @@ public class GunBehaviour : MonoBehaviour {
     [SerializeField] float range = 100f;
     [SerializeField] float weaponStrength = 1f;
     [SerializeField] float fireRate = 1f;
+    [SerializeField] bool isAutomatic = false;
 
     [Header("Ammunition Config")]
     [SerializeField] Animator anim;
@@ -18,6 +19,7 @@ public class GunBehaviour : MonoBehaviour {
 
     [Header("General Config")]
     [SerializeField] Text ammunitionText;
+    [SerializeField] Text modeText;
     [SerializeField] Camera weaponCamera;
     [SerializeField] ParticleSystem muzzleFlash;
     [SerializeField] ParticleSystem impactEffect;
@@ -25,6 +27,7 @@ public class GunBehaviour : MonoBehaviour {
     int currentAmmo;
     float nextTimeToFire = 0f;
     bool isReloading = false;
+    bool automaticMode;
 
     private void Start()
     {
@@ -55,13 +58,28 @@ public class GunBehaviour : MonoBehaviour {
         {
             StartCoroutine(Reload());
         }
+        if (Input.GetKeyDown(KeyCode.B) && isAutomatic)
+        {
+            automaticMode = !automaticMode;
+        }
 
-        if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire)
+        if (Input.GetButton("Fire1") && Time.time >= nextTimeToFire && isAutomatic && automaticMode)
         {
             nextTimeToFire = Time.time + 1f / fireRate;
             Shoot();
         }
-	}
+
+        else if (Input.GetButtonDown("Fire1") && !automaticMode)
+        {
+            Shoot();
+        }
+
+        if (automaticMode)
+            modeText.text = "Mode: Automatic";
+        else
+            modeText.text = "Mode: Singlefire";
+
+    }
 
     void Shoot()
     {
@@ -72,7 +90,7 @@ public class GunBehaviour : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(weaponCamera.transform.position, weaponCamera.transform.forward, out hit, range))
         {
-            Target target = hit.transform.GetComponent<Target>();
+            Destructible target = hit.transform.GetComponent<Destructible>();
 
             if(target != null)
             {
@@ -83,8 +101,8 @@ public class GunBehaviour : MonoBehaviour {
                 hit.rigidbody.AddForce(-hit.normal * weaponStrength);
             }
 
-            if (hit.transform.GetComponent<Target>() == null)
-            Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            ParticleSystem bulletHole = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            bulletHole.transform.SetParent(hit.transform);
         }
     }
 
